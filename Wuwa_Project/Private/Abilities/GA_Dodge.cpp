@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Abilities/GA_Dodge.h"
 #include "Characters/ParagonCharacter.h"
@@ -20,6 +20,8 @@ UGA_Dodge::UGA_Dodge()
 
 	// 3. 발동 중 적용될 상태 태그
 	ActivationOwnedTags.AddTag(WuwaGameplayTags::State_Invulnerable);
+
+	ActivationBlockedTags.AddTag(WuwaGameplayTags::State_JustDodge_Active);
 }
 
 void UGA_Dodge::ActivateAbility(

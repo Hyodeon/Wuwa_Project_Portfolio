@@ -1,11 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Data/BaseAttackData.h" // °æ·Î¿¡ ¸Â°Ô Á¶Á¤
+#include "Data/BaseAttackData.h" // ê²½ë¡œì— ë§ê²Œ ì¡°ì •
 #include "MonsterAttackData.generated.h"
 
 /**
- * ¸ó½ºÅÍ Àü¿ë °ø°İ µ¥ÀÌÅÍ (ÆĞ¸µ °¡´É ¿©ºÎ µî)
+ * ëª¬ìŠ¤í„° ì „ìš© ê³µê²© ë°ì´í„° (íŒ¨ë§ ê°€ëŠ¥ ì—¬ë¶€ ë“±)
  */
 UCLASS(BlueprintType)
 class WUWA_PROJECT_API UMonsterAttackData : public UBaseAttackData
@@ -13,11 +13,15 @@ class WUWA_PROJECT_API UMonsterAttackData : public UBaseAttackData
 	GENERATED_BODY()
 
 public:
-	// ÇÃ·¹ÀÌ¾î°¡ ÀÌ °ø°İÀ» ÆĞ¸µÇÒ ¼ö ÀÖ´ÂÁö ¿©ºÎ
+	// í”Œë ˆì´ì–´ê°€ ì´ ê³µê²©ì„ íŒ¨ë§í•  ìˆ˜ ìˆëŠ”ì§€ ì—¬ë¶€
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Parry")
 	bool bIsParryable = false;
 
-	// ÇÇ°İ´çÇÑ ÇÃ·¹ÀÌ¾îÀÇ ½ºÅÂ¹Ì³ª Ãß°¡ °¨¼Ò·® (°¡µå ºê·¹ÀÌÅ©¿ë µî)
+	// í”¼ê²©ë‹¹í•œ í”Œë ˆì´ì–´ì˜ ìŠ¤íƒœë¯¸ë‚˜ ì¶”ê°€ ê°ì†ŒëŸ‰ (ê°€ë“œ ë¸Œë ˆì´í¬ìš© ë“±)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Damage")
 	float StaminaDrain = 0.0f;
+
+	// í•´ë‹¹ ê³µê²© ì§„í–‰ ì¤‘ ìŠˆí¼ì•„ë¨¸(SuperArmor)ë¥¼ ê°€ì§€ëŠ”ì§€ ì—¬ë¶€
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|State")
+	bool bHasSuperArmor = false;
 };

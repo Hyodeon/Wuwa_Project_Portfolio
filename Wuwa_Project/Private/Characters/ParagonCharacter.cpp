@@ -177,12 +177,43 @@ void AParagonCharacter::InitializeAttributes()
 				}
 			});
 
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetValorAttribute())
+		.AddLambda([this](const FOnAttributeChangeData& Data)
+			{
+				OnValorChanged(Data.OldValue, Data.NewValue);
+				if (ParagonOverlay && AttributeSet)
+				{
+					const float MaxValor = AttributeSet->GetMaxValor();
+					if (MaxValor > 0.0f)
+					{
+						ParagonOverlay->SetValorBarPercent(Data.NewValue / MaxValor);
+					}
+				}
+			});
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetUltimateGaugeAttribute())
+		.AddLambda([this](const FOnAttributeChangeData& Data)
+			{
+				if (ParagonOverlay && AttributeSet)
+				{
+					const float MaxUlt = AttributeSet->GetMaxUltimateGauge();
+					if (MaxUlt > 0.0f)
+					{
+						ParagonOverlay->SetUltimateBarPercent(Data.NewValue / MaxUlt);
+					}
+				}
+			});
+
 	if (ParagonOverlay)
 	{
 		const float MaxHealth = AttributeSet->GetMaxHealth();
 		const float MaxStamina = AttributeSet->GetMaxStamina();
+		const float MaxValor = AttributeSet->GetMaxValor();
+		const float MaxUlt = AttributeSet->GetMaxUltimateGauge();
 		if (MaxHealth > 0.f) ParagonOverlay->SetHealthBarPercent(AttributeSet->GetHealth() / MaxHealth);
 		if (MaxStamina > 0.f) ParagonOverlay->SetStaminaBarPercent(AttributeSet->GetStamina() / MaxStamina);
+		if (MaxValor > 0.f) ParagonOverlay->SetValorBarPercent(AttributeSet->GetValor() / MaxValor);
+		if (MaxUlt > 0.f) ParagonOverlay->SetUltimateBarPercent(AttributeSet->GetUltimateGauge() / MaxUlt);
 	}
 }
 
@@ -223,13 +254,18 @@ void AParagonCharacter::InitializeGameplayEffects()
 
 void AParagonCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 {
-	if (HasMatchingGameplayTag(WuwaGameplayTags::State_Invulnerable))
+	if (HasMatchingGameplayTag(WuwaGameplayTags::State_Invulnerable) ||
+		HasMatchingGameplayTag(WuwaGameplayTags::State_HyperArmor))
 	{
 		return;
 	}
 
 	Super::GetHit_Implementation(ImpactPoint, Hitter);
-	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	if (!HasMatchingGameplayTag(WuwaGameplayTags::State_SuperArmor))
+	{
+		SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
 }
 
 // ================= [입력 처리: GAS 트리거] =================
@@ -634,9 +670,72 @@ void AParagonCharacter::InitializeParagonOverlay()
 			{
 				ParagonOverlay->SetHealthBarPercent(1.f);
 				ParagonOverlay->SetStaminaBarPercent(1.f);
+				ParagonOverlay->SetValorBarPercent(0.f);
+				ParagonOverlay->SetUltimateBarPercent(0.f);
 				ParagonOverlay->SetGold(0);
 				ParagonOverlay->SetSouls(0);
 			}
 		}
 	}
 }
+void AParagonCharacter::OnValorChanged(float OldValue, float NewValue)
+{
+	if (!AbilitySystemComponent) return;
+
+	// Damage Reduction (50 이상)
+	bool bHadDR = OldValue >= 50.f;
+	bool bHasDR = NewValue >= 50.f;
+
+	if (bHasDR && !bHadDR)
+	{
+		// 50 진입: GE 적용
+		if (GE_Valor_DamageReduction)
+		{
+			FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
+			Context.AddSourceObject(this);
+			FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(GE_Valor_DamageReduction, 1.0f, Context);
+			if (SpecHandle.IsValid())
+			{
+				ActiveValorDRHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			}
+		}
+	}
+	else if (!bHasDR && bHadDR)
+	{
+		// 50 미만으로 떨어짐: GE 제거
+		if (ActiveValorDRHandle.IsValid())
+		{
+			AbilitySystemComponent->RemoveActiveGameplayEffect(ActiveValorDRHandle);
+			ActiveValorDRHandle.Invalidate();
+		}
+	}
+
+	// Super Armor (100 도달)
+	bool bHadSA = OldValue >= 100.f;
+	bool bHasSA = NewValue >= 100.f;
+
+	if (bHasSA && !bHadSA)
+	{
+		// 100 도달: GE 적용
+		if (GE_Valor_SuperArmor)
+		{
+			FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
+			Context.AddSourceObject(this);
+			FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(GE_Valor_SuperArmor, 1.0f, Context);
+			if (SpecHandle.IsValid())
+			{
+				ActiveValorSuperArmorHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			}
+		}
+	}
+	else if (!bHasSA && bHadSA)
+	{
+		// 100 미만으로 떨어짐: GE 제거
+		if (ActiveValorSuperArmorHandle.IsValid())
+		{
+			AbilitySystemComponent->RemoveActiveGameplayEffect(ActiveValorSuperArmorHandle);
+			ActiveValorSuperArmorHandle.Invalidate();
+		}
+	}
+}
+

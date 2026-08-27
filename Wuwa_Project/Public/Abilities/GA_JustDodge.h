@@ -47,11 +47,14 @@ protected:
 	UFUNCTION()
 	void OnCheckComboReceived(FGameplayEventData Payload);
 
+	void TriggerCounterAttack();
+
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> JustDodgeMontage;
 
 private:
 	bool bAttackBuffered;
+	bool bComboWindowOpen;
 
 	UPROPERTY()
 	TObjectPtr<UAbilityTask_PlayMontageAndWait> MontageTask;

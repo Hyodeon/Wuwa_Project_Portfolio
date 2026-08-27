@@ -5,7 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "ParagonAttributeSet.generated.h"
 
-// GAS Ç¥ÁØ Á¢±ÙÀÚ ¸ÅÅ©·Î
+// GAS í‘œì¤€ ì ‘ê·¼ì ë§¤í¬ë¡œ
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
 	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
 	GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
@@ -23,7 +23,7 @@ public:
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 
-	// ================= [1. ±âº» Ã¼·Â & ½ºÅÂ¹Ì³ª] =================
+	// ================= [1. ê¸°ë³¸ ì²´ë ¥ & ìŠ¤íƒœë¯¸ë‚˜] =================
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Health")
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, Health);
@@ -44,30 +44,70 @@ public:
 	FGameplayAttributeData DodgeCost;
 	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, DodgeCost);
 
-	// ================= [2. °ø°İ °ü·Ã °ø¿ë ½ºÅÈ] =================
-	// ±âº» °ø°İ·Â
+	// ================= [2. ê³µê²© ê´€ë ¨ ê³µìš© ìŠ¤íƒ¯] =================
+	// ê¸°ë³¸ ê³µê²©ë ¥
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Combat")
 	FGameplayAttributeData AttackPower;
 	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, AttackPower);
 
-	// °øÁø ÆÄ±« °ø°İ·Â
+	// ê³µì§„ íŒŒê´´ ê³µê²©ë ¥
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Combat")
 	FGameplayAttributeData ResonanceAttackPower;
 	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, ResonanceAttackPower);
 
-	// ================= [3. Àû Àü¿ë °øÁø(Resonance) ½ºÅÈ] =================
-	// ÇöÀç °øÁø ¼öÄ¡
+	// ================= [3. ì  ì „ìš© ê³µì§„(Resonance) ìŠ¤íƒ¯] =================
+	// í˜„ì¬ ê³µì§„ ìˆ˜ì¹˜
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Resonance")
 	FGameplayAttributeData ResonanceValue;
 	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, ResonanceValue);
 
-	// ÃÖ´ë °øÁø ¼öÄ¡
+	// ìµœëŒ€ ê³µì§„ ìˆ˜ì¹˜
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Resonance")
 	FGameplayAttributeData MaxResonanceValue;
 	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, MaxResonanceValue);
 
-	// °øÁø Ä­ ¼ö (±âº» 4Ä­)
+	// ê³µì§„ ì¹¸ ìˆ˜ (ê¸°ë³¸ 4ì¹¸)
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Resonance")
 	FGameplayAttributeData ResonanceChunks;
 	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, ResonanceChunks);
+	// ================= [4. íˆ¬ì‚¬(Valor Fighter) ì „ìš© ìŠ¤íƒ¯] =================
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Valor")
+	FGameplayAttributeData Valor;
+	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, Valor);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Valor")
+	FGameplayAttributeData MaxValor;
+	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, MaxValor);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Ultimate")
+	FGameplayAttributeData UltimateGauge;
+	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, UltimateGauge);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Ultimate")
+	FGameplayAttributeData MaxUltimateGauge;
+	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, MaxUltimateGauge);
+
+	// ================= [5. ìŒê²€ì‚¬(Blade Dancer) ì „ìš© ìŠ¤íƒ¯] =================
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes|BladeDance")
+	FGameplayAttributeData BladeDance;
+	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, BladeDance);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes|BladeDance")
+	FGameplayAttributeData MaxBladeDance;
+	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, MaxBladeDance);
+
+	// ================= [6. ê³µìš© í˜‘ì£¼(Concerto) ìŠ¤íƒ¯] =================
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Concerto")
+	FGameplayAttributeData ConcertoGauge;
+	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, ConcertoGauge);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Concerto")
+	FGameplayAttributeData MaxConcertoGauge;
+	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, MaxConcertoGauge);
+
+	// ================= [7. ë°©ì–´(Defense) ê´€ë ¨ ìŠ¤íƒ¯] =================
+	// í”¼í•´ ê°ì†Œìœ¨ (ê¸°ë³¸ê°’ 0.0, 1.0 = 100% í”¼í•´ ë©´ì—­)
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Defense")
+	FGameplayAttributeData IncomingDamageReduction;
+	ATTRIBUTE_ACCESSORS(UParagonAttributeSet, IncomingDamageReduction);
 };

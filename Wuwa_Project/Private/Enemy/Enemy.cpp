@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Enemy/Enemy.h"
 
@@ -16,6 +16,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/CombatManagerComponent.h"
+#include "WuwaGameplayTags.h"
 
 #include "AttributeSet/ParagonAttributeSet.h"
 #include "AbilitySystemComponent.h"
@@ -144,6 +145,12 @@ void AEnemy::AttackEnd()
 
 void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 {
+	if (HasMatchingGameplayTag(WuwaGameplayTags::State_Invulnerable) ||
+		HasMatchingGameplayTag(WuwaGameplayTags::State_HyperArmor))
+	{
+		return;
+	}
+
 	Super::GetHit_Implementation(ImpactPoint, Hitter);
 
 	if (!IsAlive()) return;
@@ -162,11 +169,14 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 				BB->SetValueAsBool(TEXT("bNeedsHelp"), true);
 
 				// 도움이 필요하니 토큰을 반납한다.
-				if (AActor* Target = Cast<AActor>(EnemyController->GetBlackboardComponent()->GetValueAsObject(FName("TargetActor"))))
+				if (!HasMatchingGameplayTag(WuwaGameplayTags::State_SuperArmor) || bCanBeParried)
 				{
-					if (UCombatManagerComponent* Manager = Target->FindComponentByClass<UCombatManagerComponent>())
+					if (AActor* Target = Cast<AActor>(EnemyController->GetBlackboardComponent()->GetValueAsObject(FName("TargetActor"))))
 					{
-						Manager->ReleaseToken(this);
+						if (UCombatManagerComponent* Manager = Target->FindComponentByClass<UCombatManagerComponent>())
+						{
+							Manager->ReleaseToken(this);
+						}
 					}
 				}
 			}
@@ -175,21 +185,30 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 	// </SWARM AI>
 
 	// 맞거나 죽으면 쥐고 있던 토큰을 무조건 뱉어냄 (토큰 누수 원천 차단)
-	if (AActor* Target = Cast<AActor>(EnemyController->GetBlackboardComponent()->GetValueAsObject(FName("TargetActor"))))
+	if (!HasMatchingGameplayTag(WuwaGameplayTags::State_SuperArmor) || bCanBeParried)
 	{
-		if (UCombatManagerComponent* Manager = Target->FindComponentByClass<UCombatManagerComponent>())
+		if (AActor* Target = Cast<AActor>(EnemyController->GetBlackboardComponent()->GetValueAsObject(FName("TargetActor"))))
 		{
-			Manager->ReleaseToken(this);
+			if (UCombatManagerComponent* Manager = Target->FindComponentByClass<UCombatManagerComponent>())
+			{
+				Manager->ReleaseToken(this);
+			}
 		}
 	}
 
 	// 상태 업데이트
 	if (AAIController* AICon = Cast<AAIController>(GetController()))
 	{
-		AICon->StopMovement();
+		if (!HasMatchingGameplayTag(WuwaGameplayTags::State_SuperArmor) || bCanBeParried)
+		{
+			AICon->StopMovement();
+		}
 		if (UBlackboardComponent* BB = AICon->GetBlackboardComponent())
 		{
-			BB->SetValueAsBool(FName("IsHitReacting"), true);
+			if (!HasMatchingGameplayTag(WuwaGameplayTags::State_SuperArmor) || bCanBeParried)
+			{
+				BB->SetValueAsBool(FName("IsHitReacting"), true);
+			}
 			if (Hitter && Hitter->ActorHasTag(FName("EngageableTarget")))
 			{
 				BB->SetValueAsObject(FName("TargetActor"), Hitter);
@@ -200,7 +219,14 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 	if (bCanBeParried)
 	{
 		GetParried(Hitter, ImpactPoint);
-		PlayHitReactMontage(FName("Front"));
+		if (!HasMatchingGameplayTag(WuwaGameplayTags::State_Groggy))
+		{
+			PlayHitReactMontage(FName("Front"));
+			if (MotionWarpingComponent)
+			{
+				MotionWarpingComponent->RemoveAllWarpTargets();
+			}
+		}
 	}
 
 	FVector PushDirection = Hitter ? Hitter->GetActorForwardVector().GetSafeNormal2D() : (GetActorLocation() - ImpactPoint).GetSafeNormal2D();
@@ -293,8 +319,6 @@ void AEnemy::Die()
 {
 	Super::Die();
 
-	LoseInterest();
-
 	EnemyState = EEnemyState::EES_Dead;
 	Tags.Remove(FName("Enemy"));
 
@@ -331,6 +355,8 @@ void AEnemy::Die()
 		AICon->StopMovement();
 	}
 
+	LoseInterest();
+
 	HideHealthBar();
 	DisableCapsule();
 	DisableMeshCollision();
@@ -366,12 +392,34 @@ void AEnemy::InitializeAttributes()
 				}
 			});
 
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetResonanceValueAttribute())
+		.AddLambda([this](const FOnAttributeChangeData& Data)
+			{
+				if (HealthBarWidget && AttributeSet)
+				{
+					const float MaxResonance = AttributeSet->GetMaxResonanceValue();
+					if (MaxResonance > 0.0f)
+					{
+						HealthBarWidget->SetResonancePercent(Data.NewValue / MaxResonance);
+						
+						UE_LOG(LogTemp, Warning, TEXT("ResonanceValue: %f / %f"), Data.NewValue, MaxResonance);
+
+						if (Data.NewValue <= 0.0f && !HasMatchingGameplayTag(WuwaGameplayTags::State_Groggy) && IsAlive())
+						{
+							TriggerGroggy();
+						}
+					}
+				}
+			});
+
 	if (HealthBarWidget && AttributeSet)
 	{
 		const float MaxHealth = AttributeSet->GetMaxHealth();
 		if (MaxHealth > 0.0f)
 		{
 			HealthBarWidget->SetHealthPercent(AttributeSet->GetHealth() / MaxHealth);
+			const float MaxResonance = AttributeSet->GetMaxResonanceValue();
+			if (MaxResonance > 0.0f) { HealthBarWidget->SetResonancePercent(AttributeSet->GetResonanceValue() / MaxResonance); }
 		}
 	}
 }
@@ -469,3 +517,98 @@ void AEnemy::OnAllyDied()
 		EnemyController->GetBlackboardComponent()->SetValueAsFloat(TEXT("AggressionLevel"), CurrentAggression);
 	}
 }
+
+void AEnemy::TriggerGroggy()
+{
+	if (!IsAlive() || HasMatchingGameplayTag(WuwaGameplayTags::State_Groggy)) return;
+
+	// 태그 추가
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->AddLooseGameplayTag(WuwaGameplayTags::State_Groggy);
+	}
+
+	// 블랙보드 업데이트 (BT 정지)
+	if (AAIController* AICon = Cast<AAIController>(GetController()))
+	{
+		AICon->StopMovement();
+		if (UBlackboardComponent* BB = AICon->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(TEXT("Groggy"), true);
+		}
+	}
+
+	// 타겟팅 해제 및 토큰 반납 (Swarm AI 대응)
+	if (EnemyController)
+	{
+		if (UBlackboardComponent* BB = EnemyController->GetBlackboardComponent())
+		{
+			if (AActor* Target = Cast<AActor>(BB->GetValueAsObject(FName("TargetActor"))))
+			{
+				if (UCombatManagerComponent* Manager = Target->FindComponentByClass<UCombatManagerComponent>())
+				{
+					Manager->ReleaseToken(this);
+				}
+			}
+		}
+	}
+
+	// 몽타주 재생
+	if (GroggyMontage)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Playing Groggy Montage!"));
+		
+		// 혹시 재생 중인 몽타주가 있다면 강제로 끊습니다.
+		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+		{
+			AnimInstance->Montage_Stop(0.1f);
+		}
+
+		PlayAnimMontage(GroggyMontage);
+	}
+
+	// 20초 후 자동 회복
+	GetWorldTimerManager().SetTimer(GroggyTimerHandle, this, &AEnemy::RecoverFromGroggy, 6.f, false);
+}
+
+void AEnemy::RecoverFromGroggy()
+{
+	if (!IsAlive()) return;
+
+	// 타이머 취소
+	GetWorldTimerManager().ClearTimer(GroggyTimerHandle);
+
+	// 태그 제거
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->RemoveLooseGameplayTag(WuwaGameplayTags::State_Groggy);
+	}
+
+	// 공진 수치 원상 복구
+	if (AttributeSet)
+	{
+		float MaxResonance = AttributeSet->GetMaxResonanceValue();
+		AttributeSet->SetResonanceValue(MaxResonance);
+		
+		if (HealthBarWidget && MaxResonance > 0.0f)
+		{
+			HealthBarWidget->SetResonancePercent(1.0f);
+		}
+	}
+
+	// 몽타주 정지
+	if (GroggyMontage)
+	{
+		StopAnimMontage(GroggyMontage);
+	}
+
+	// 블랙보드 업데이트 (BT 재개)
+	if (AAIController* AICon = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BB = AICon->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(TEXT("Groggy"), false);
+		}
+	}
+}
+

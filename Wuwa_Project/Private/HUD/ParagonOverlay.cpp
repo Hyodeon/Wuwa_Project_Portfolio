@@ -1,5 +1,6 @@
-#include "HUD/ParagonOverlay.h"
+ï»¿#include "HUD/ParagonOverlay.h"
 #include "Components/ProgressBar.h"
+#include "Components/RadialSlider.h"	
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
 #include "Components/CanvasPanelSlot.h"
@@ -14,6 +15,16 @@ void UParagonOverlay::SetHealthBarPercent(float Percent)
 void UParagonOverlay::SetStaminaBarPercent(float Percent)
 {
 	if (StaminaProgressBar) StaminaProgressBar->SetPercent(Percent);
+}
+
+void UParagonOverlay::SetValorBarPercent(float Percent)
+{
+	if (ValorProgressBar) ValorProgressBar->SetPercent(Percent);
+}
+
+void UParagonOverlay::SetUltimateBarPercent(float Percent)
+{
+	if (UltimateProgressBar) UltimateProgressBar->SetValue(Percent);
 }
 
 void UParagonOverlay::SetGold(int32 Gold)
@@ -42,14 +53,14 @@ void UParagonOverlay::UpdateLockOnMarkerPosition(const FVector& TargetWorldLocat
 	if (!PC) return;
 
 	FVector2D ScreenPosition;
-	// 3D ¿ùµå ÁÂÇ¥ -> ºäÆ÷Æ® 2D À§Á¬ ÁÂÇ¥·Î º¯È¯
+	// 3D ì›”ë“œ ì¢Œí‘œ -> ë·°í¬íŠ¸ 2D ìœ„ì ¯ ì¢Œí‘œë¡œ ë³€í™˜
 	bool bProjected = UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, TargetWorldLocation, ScreenPosition, false);
 
 	if (bProjected)
 	{
 		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(LockOnMarker->Slot))
 		{
-			// ¸¶Ä¿ÀÇ Áß½É Á¤·Ä
+			// ë§ˆì»¤ì˜ ì¤‘ì‹¬ ì •ë ¬
 			CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
 			CanvasSlot->SetPosition(ScreenPosition);
 		}

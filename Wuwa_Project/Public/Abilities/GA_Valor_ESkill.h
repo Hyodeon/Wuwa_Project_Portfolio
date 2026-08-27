@@ -10,7 +10,7 @@ class UAbilityTask_WaitInputRelease;
 class UAbilityTask_WaitDelay;
 
 /**
- * ¿ë¸ÍÇÑ Åõ»ç(Valor Fighter) E ½ºÅ³: Â÷Áö & ¸±¸®Áî ¾îºô¸®Æ¼
+ * ìš©ë§¹í•œ íˆ¬ì‚¬(Valor Fighter) E ìŠ¤í‚¬: ì°¨ì§€ & ë¦´ë¦¬ì¦ˆ ì–´ë¹Œë¦¬í‹°
  */
 UCLASS()
 class WUWA_PROJECT_API UGA_Valor_ESkill : public UGameplayAbility
@@ -36,25 +36,28 @@ public:
 	) override;
 
 protected:
-	/** ½ºÅ³ ¸ùÅ¸ÁÖ (Charge_Start, Charge_Loop, Attack_Release Æ÷ÇÔ) */
+	/** ìŠ¤í‚¬ ëª½íƒ€ì£¼ (Charge_Start, Charge_Loop, Attack_Release í¬í•¨) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Valor|Montage")
 	TObjectPtr<UAnimMontage> SkillMontage;
 
-	/** ÃÖ´ë Â÷Áö À¯Áö ½Ã°£ (±âº»°ª 2.5ÃÊ) */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Valor|Combat")
+	TObjectPtr<class UPlayerAttackData> AttackData;
+
+	/** ìµœëŒ€ ì°¨ì§€ ìœ ì§€ ì‹œê°„ (ê¸°ë³¸ê°’ 2.5ì´ˆ) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Valor|Combat")
 	float MaxChargeTime = 2.5f;
 
-	/** ¸ùÅ¸ÁÖ ¼½¼Ç ÀÌ¸§ »ó¼ö Á¤ÀÇ */
+	/** ëª½íƒ€ì£¼ ì„¹ì…˜ ì´ë¦„ ìƒìˆ˜ ì •ì˜ */
 	const FName Section_Start = TEXT("Charge_Start");
 	const FName Section_Loop = TEXT("Charge_Loop");
 	const FName Section_Release = TEXT("Attack_Release");
 
 private:
-	/** InputRelease µ¨¸®°ÔÀÌÆ®¿ë (float ÀÎÀÚ ¼ö½Å) */
+	/** InputRelease ë¸ë¦¬ê²Œì´íŠ¸ìš© (float ì¸ì ìˆ˜ì‹ ) */
 	UFUNCTION()
 	void OnInputReleased(float TimeHeld);
 
-	/** Delay ¿Ï·á ¹× °øÅë ¸±¸®Áî Ã³¸® ÇÔ¼ö (ÀÎÀÚ ¾øÀ½) */
+	/** Delay ì™„ë£Œ ë° ê³µí†µ ë¦´ë¦¬ì¦ˆ ì²˜ë¦¬ í•¨ìˆ˜ (ì¸ì ì—†ìŒ) */
 	UFUNCTION()
 	void HandleReleaseTriggered();
 
@@ -76,6 +79,6 @@ private:
 	UPROPERTY()
 	TObjectPtr<UAbilityTask_WaitDelay> WaitDelayTask;
 
-	/** Áßº¹ ½ÇÇà ¹æÁö ÇÃ·¡±× */
+	/** ì¤‘ë³µ ì‹¤í–‰ ë°©ì§€ í”Œë˜ê·¸ */
 	bool bHasReleased = false;
 };

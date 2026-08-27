@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -59,6 +59,14 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "AI|Swarm")
 	float RecentDamage = 0.0f;
 	// </SWARM AI>
+	
+	// <GROGGY>
+	UFUNCTION(BlueprintCallable, Category = "Combat|Groggy")
+	void TriggerGroggy();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat|Groggy")
+	void RecoverFromGroggy();
+	// </GROGGY>
 	// </COMBAT>
 
 
@@ -108,6 +116,11 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float DeathLifeSpan = 5.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Groggy")
+	TObjectPtr<UAnimMontage> GroggyMontage;
+
+	FTimerHandle GroggyTimerHandle;
 
 	UPROPERTY()
 	TObjectPtr<AAIController> EnemyController;

@@ -3,21 +3,36 @@
 
 UParagonAttributeSet::UParagonAttributeSet()
 {
-	// ±âº» »ıÁ¸ ½ºÅÈ
+	// ê¸°ë³¸ ìƒì¡´ ìŠ¤íƒ¯
 	InitHealth(1500.f);
 	InitMaxHealth(1500.f);
 	InitStamina(100.f);
 	InitMaxStamina(100.f);
 	InitDodgeCost(10.f);
 
-	// ÀüÅõ ½ºÅÈ ±âº»°ª
+	// ì „íˆ¬ ìŠ¤íƒ¯ ê¸°ë³¸ê°’
 	InitAttackPower(50.f);
 	InitResonanceAttackPower(20.f);
 
-	// Àû °øÁø ½ºÅÈ ±âº»°ª
+	// ê³µì§„ ê´€ë ¨ ìŠ¤íƒ¯ ì´ˆê¸°í™”
 	InitResonanceValue(100.f);
 	InitMaxResonanceValue(100.f);
 	InitResonanceChunks(4.f);
+
+	// íˆ¬ì‚¬(Valor) ìŠ¤íƒ¯ ì´ˆê¸°í™”
+	InitValor(0.f);
+	InitMaxValor(100.f);
+	InitUltimateGauge(0.f);
+	InitMaxUltimateGauge(100.f);
+
+	// ìŒê²€ì‚¬(BladeDance) & í˜‘ì£¼(Concerto) ìŠ¤íƒ¯ ì´ˆê¸°í™”
+	InitBladeDance(0.f);
+	InitMaxBladeDance(100.f);
+	InitConcertoGauge(0.f);
+	InitMaxConcertoGauge(100.f);
+
+	// ë°©ì–´ ìŠ¤íƒ¯ ì´ˆê¸°í™”
+	InitIncomingDamageReduction(0.f);
 }
 
 void UParagonAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -35,6 +50,22 @@ void UParagonAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribut
 	else if (Attribute == GetResonanceValueAttribute())
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxResonanceValue());
+	}
+	else if (Attribute == GetValorAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxValor());
+	}
+	else if (Attribute == GetUltimateGaugeAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxUltimateGauge());
+	}
+	else if (Attribute == GetBladeDanceAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxBladeDance());
+	}
+	else if (Attribute == GetConcertoGaugeAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxConcertoGauge());
 	}
 	else if (Attribute == GetResonanceChunksAttribute())
 	{
@@ -57,5 +88,21 @@ void UParagonAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCal
 	else if (Data.EvaluatedData.Attribute == GetResonanceValueAttribute())
 	{
 		SetResonanceValue(FMath::Clamp(GetResonanceValue(), 0.f, GetMaxResonanceValue()));
+	}
+	else if (Data.EvaluatedData.Attribute == GetValorAttribute())
+	{
+		SetValor(FMath::Clamp(GetValor(), 0.f, GetMaxValor()));
+	}
+	else if (Data.EvaluatedData.Attribute == GetUltimateGaugeAttribute())
+	{
+		SetUltimateGauge(FMath::Clamp(GetUltimateGauge(), 0.f, GetMaxUltimateGauge()));
+	}
+	else if (Data.EvaluatedData.Attribute == GetBladeDanceAttribute())
+	{
+		SetBladeDance(FMath::Clamp(GetBladeDance(), 0.f, GetMaxBladeDance()));
+	}
+	else if (Data.EvaluatedData.Attribute == GetConcertoGaugeAttribute())
+	{
+		SetConcertoGauge(FMath::Clamp(GetConcertoGauge(), 0.f, GetMaxConcertoGauge()));
 	}
 }

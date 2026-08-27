@@ -1,4 +1,4 @@
-﻿#include "Abilities/GA_JustDodge.h"
+#include "Abilities/GA_JustDodge.h"
 #include "Characters/ParagonCharacter.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
@@ -42,6 +42,13 @@ void UGA_JustDodge::ActivateAbility(
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
+	}
+
+	// 닷지를 유발한 적을 캐싱 (반격기 등에서 타겟팅에 사용)
+	if (TriggerEventData && TriggerEventData->Instigator)
+	{
+		const AActor* ConstInstigator = TriggerEventData->Instigator;
+		Character->SetLastDodgedEnemy(const_cast<AActor*>(ConstInstigator));
 	}
 
 	// 기존 회피에서 캐싱한 방향과 록온 상태 가져오기
@@ -94,6 +101,7 @@ void UGA_JustDodge::ActivateAbility(
 			WaitEventTask->ReadyForActivation();
 
 			bAttackBuffered = false;
+			bComboWindowOpen = false;
 
 			InputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, WuwaGameplayTags::Event_Combat_AttackInput, nullptr, false, false);
 			if (InputEventTask)
@@ -121,22 +129,37 @@ void UGA_JustDodge::OnDodgeEndEventReceived(FGameplayEventData Payload)
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
+void UGA_JustDodge::TriggerCounterAttack()
+{
+	AParagonCharacter* Character = Cast<AParagonCharacter>(GetAvatarActorFromActorInfo());
+	if (Character && Character->GetDodgeCounterAbilityClass())
+	{
+		// 수동으로 반격기 호출 후 현재 닷지(자신)는 종료
+		Character->GetAbilitySystemComponent()->TryActivateAbilityByClass(Character->GetDodgeCounterAbilityClass());
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	}
+}
+
 void UGA_JustDodge::OnAttackInputReceived(FGameplayEventData Payload)
 {
 	bAttackBuffered = true;
+	
+	// 콤보 윈도우가 이미 열려있다면 즉시 반격기 발동
+	if (bComboWindowOpen)
+	{
+		TriggerCounterAttack();
+	}
 }
 
 void UGA_JustDodge::OnCheckComboReceived(FGameplayEventData Payload)
 {
+	// 콤보 윈도우 개방
+	bComboWindowOpen = true;
+
+	// 이미 입력이 버퍼링 되어 있다면 즉시 반격기 발동
 	if (bAttackBuffered)
 	{
-		AParagonCharacter* Character = Cast<AParagonCharacter>(GetAvatarActorFromActorInfo());
-		if (Character && Character->GetDodgeCounterAbilityClass())
-		{
-			// 수동으로 반격기 호출 후 현재 닷지(자신)는 종료
-			Character->GetAbilitySystemComponent()->TryActivateAbilityByClass(Character->GetDodgeCounterAbilityClass());
-			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-		}
+		TriggerCounterAttack();
 	}
 }
 

@@ -6,6 +6,8 @@
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "GameFramework/Character.h"
 #include "Animation/AnimInstance.h"
+#include "Characters/BaseCharacter.h"
+#include "Data/PlayerAttackData.h"
 
 UGA_Valor_ESkill::UGA_Valor_ESkill()
 {
@@ -20,6 +22,14 @@ void UGA_Valor_ESkill::ActivateAbility(
 	const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	if (AttackData)
+	{
+		if (class ABaseCharacter* Character = Cast<class ABaseCharacter>(GetAvatarActorFromActorInfo()))
+		{
+			Character->SetCurrentAttackData(AttackData);
+		}
+	}
 
 	//if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	//{
@@ -41,7 +51,7 @@ void UGA_Valor_ESkill::ActivateAbility(
 
 	bHasReleased = false;
 
-	// 1. ¸ùÅ¸ÁÖ Àç»ı (±âº» ½ÃÀÛÁ¡: Charge_Start)
+	// 1. ëª½íƒ€ì£¼ ì¬ìƒ (ê¸°ë³¸ ì‹œì‘ì : Charge_Start)
 	MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this,
 		TEXT("PlaySkillMontage"),
@@ -61,20 +71,20 @@ void UGA_Valor_ESkill::ActivateAbility(
 	MontageTask->OnCancelled.AddDynamic(this, &UGA_Valor_ESkill::OnMontageCancelled);
 	MontageTask->ReadyForActivation();
 
-	// 2. ÀÔ·Â ÇØÁ¦(Release) ´ë±â ÅÂ½ºÅ©
+	// 2. ì…ë ¥ í•´ì œ(Release) ëŒ€ê¸° íƒœìŠ¤í¬
 	WaitInputReleaseTask = UAbilityTask_WaitInputRelease::WaitInputRelease(this, true);
 	if (WaitInputReleaseTask)
 	{
-		//  OnRelease´Â OnInputReleased(float)¿¡ ¹ÙÀÎµù
+		//  OnReleaseëŠ” OnInputReleased(float)ì— ë°”ì¸ë”©
 		WaitInputReleaseTask->OnRelease.AddDynamic(this, &UGA_Valor_ESkill::OnInputReleased);
 		WaitInputReleaseTask->ReadyForActivation();
 	}
 
-	// 3. ÃÖ´ë Â÷Áö ½Ã°£ ´ë±â ÅÂ½ºÅ© (2.5ÃÊ)
+	// 3. ìµœëŒ€ ì°¨ì§€ ì‹œê°„ ëŒ€ê¸° íƒœìŠ¤í¬ (2.5ì´ˆ)
 	WaitDelayTask = UAbilityTask_WaitDelay::WaitDelay(this, MaxChargeTime);
 	if (WaitDelayTask)
 	{
-		//  OnFinish´Â HandleReleaseTriggered()¿¡ ¹ÙÀÎµù
+		//  OnFinishëŠ” HandleReleaseTriggered()ì— ë°”ì¸ë”©
 		WaitDelayTask->OnFinish.AddDynamic(this, &UGA_Valor_ESkill::HandleReleaseTriggered);
 		WaitDelayTask->ReadyForActivation();
 	}
@@ -90,16 +100,16 @@ void UGA_Valor_ESkill::HandleReleaseTriggered()
 	if (bHasReleased) return;
 	bHasReleased = true;
 
-	// ±âÁ¸ ¸±¸®Áî Á¡ÇÁ/¿¬°á ·ÎÁ÷ ±×´ë·Î À¯Áö
+	// ê¸°ì¡´ ë¦´ë¦¬ì¦ˆ ì í”„/ì—°ê²° ë¡œì§ ê·¸ëŒ€ë¡œ ìœ ì§€
 	if (IsValid(WaitInputReleaseTask))
 	{
 		WaitInputReleaseTask->EndTask();
-		WaitInputReleaseTask = nullptr; // ÇÙ½É: ¾²·¹±â°ª ¹æÁö
+		WaitInputReleaseTask = nullptr; // í•µì‹¬: ì“°ë ˆê¸°ê°’ ë°©ì§€
 	}
 	if (IsValid(WaitDelayTask))
 	{
 		WaitDelayTask->EndTask();
-		WaitDelayTask = nullptr; // ÇÙ½É: ¾²·¹±â°ª ¹æÁö
+		WaitDelayTask = nullptr; // í•µì‹¬: ì“°ë ˆê¸°ê°’ ë°©ì§€
 	}
 
 	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
@@ -134,8 +144,8 @@ void UGA_Valor_ESkill::OnMontageInterrupted()
 
 	if (bHasReleased)
 	{
-		// ¸¸¾à Â÷Â¡ Áß(·çÇÁ)¿¡ ²÷±ä °Ô ¾Æ´Ï¶ó, 
-		// º£±â(¸±¸®Áî)°¡ ÀÌ¹Ì ½ÃÀÛµÈ ÀÌÈÄ¿¡ ²÷°å´Ù¸é ÄğÅ¸ÀÓÀ» µ¹¸®°Ô Ã³¸®ÇÒ ¼öµµ ÀÖ½À´Ï´Ù.
+		// ë§Œì•½ ì°¨ì§• ì¤‘(ë£¨í”„)ì— ëŠê¸´ ê²Œ ì•„ë‹ˆë¼, 
+		// ë² ê¸°(ë¦´ë¦¬ì¦ˆ)ê°€ ì´ë¯¸ ì‹œì‘ëœ ì´í›„ì— ëŠê²¼ë‹¤ë©´ ì¿¨íƒ€ì„ì„ ëŒë¦¬ê²Œ ì²˜ë¦¬í•  ìˆ˜ë„ ìˆìŠµë‹ˆë‹¤.
 	}
 
 	CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
@@ -155,6 +165,11 @@ void UGA_Valor_ESkill::EndAbility(
 	bool bReplicateEndAbility,
 	bool bWasCancelled)
 {
+	if (class ABaseCharacter* Character = Cast<class ABaseCharacter>(GetAvatarActorFromActorInfo()))
+	{
+		Character->SetCurrentAttackData(nullptr);
+	}
+
 	bHasReleased = false;
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);

@@ -5,9 +5,16 @@ namespace WuwaGameplayTags
 	// SetByCaller
 	UE_DEFINE_GAMEPLAY_TAG(Data_Damage_MotionValue, "Data.Damage.MotionValue");
 	UE_DEFINE_GAMEPLAY_TAG(Data_Damage_ResonanceValue, "Data.Damage.ResonanceValue");
+	
+	UE_DEFINE_GAMEPLAY_TAG(Data_Resource_Valor, "Data.Resource.Valor");
+	UE_DEFINE_GAMEPLAY_TAG(Data_Resource_BladeDance, "Data.Resource.BladeDance");
+	UE_DEFINE_GAMEPLAY_TAG(Data_Resource_Concerto, "Data.Resource.Concerto");
+	UE_DEFINE_GAMEPLAY_TAG(Data_Resource_Ultimate, "Data.Resource.Ultimate");
 
 	// State
 	UE_DEFINE_GAMEPLAY_TAG(State_Groggy, "State.Groggy");
+	UE_DEFINE_GAMEPLAY_TAG(State_SuperArmor, "State.SuperArmor");
+	UE_DEFINE_GAMEPLAY_TAG(State_HyperArmor, "State.HyperArmor");
 	UE_DEFINE_GAMEPLAY_TAG(State_Invulnerable, "State.Invulnerable");
 	UE_DEFINE_GAMEPLAY_TAG(State_DodgeWindow, "State.DodgeWindow");
 	UE_DEFINE_GAMEPLAY_TAG(State_Dead, "State.Dead");

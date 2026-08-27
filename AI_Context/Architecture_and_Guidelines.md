@@ -70,4 +70,4 @@ AI 어시스턴트(Antigravity 등)가 본 프로젝트에서 코드를 생성�
   - **전략적 포지셔닝 (Smart Strafing & Raycast):** 아군 충돌 방지 회피 기동 및 플레이어 주변을 관통하지 않고 공전하는 스트레이핑 수리 완료. 
   - **글로벌 쿨타임 (Global Cooldown):** 스킬과 일반 공격 간의 연계를 제한하는 C++ 기반 `BTDecorator_SharedCooldown` 적용 완료.
 
-- **다음 단계 (Step 6): [목표 입력 대기 중]**
+- **다음 단계 (Step 6): 아머(Armor) 및 공진(Resonance) UI 시스템 구축** (자세한 기획은 Implementation_plan.md 참조)

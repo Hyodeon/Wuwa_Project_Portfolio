@@ -1,0 +1,6 @@
+*
+!*/
+.agents/
+!Wuwa_Project/**/*.cpp
+!Wuwa_Project/**/*.h
+!.gitignore

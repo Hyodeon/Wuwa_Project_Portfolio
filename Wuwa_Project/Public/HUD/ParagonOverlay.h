@@ -5,6 +5,7 @@
 #include "ParagonOverlay.generated.h"
 
 class UProgressBar;
+class URadialSlider;
 class UTextBlock;
 class UImage;
 
@@ -16,14 +17,16 @@ class WUWA_PROJECT_API UParagonOverlay : public UUserWidget
 public:
 	void SetHealthBarPercent(float Percent);
 	void SetStaminaBarPercent(float Percent);
+	void SetValorBarPercent(float Percent);
+	void SetUltimateBarPercent(float Percent);
 
 	void SetGold(int32 Gold);
 	void SetSouls(int32 Souls);
 
-	/** ¶ô¿Â ¸¶Ä¿¸¦ ÄÑ°Å³ª ²ü´Ï´Ù */
+	/** ë½ì˜¨ ë§ˆì»¤ë¥¼ ì¼œê±°ë‚˜ ë•ë‹ˆë‹¤ */
 	void ShowLockOnMarker(bool bShow);
 
-	/** Å¸°ÙÀÇ ¿ùµå ÁÂÇ¥¸¦ ³Ñ°Ü¹Ş¾Æ ¶ô¿Â ¸¶Ä¿ÀÇ 2D ½ºÅ©¸° À§Ä¡¸¦ °»½ÅÇÕ´Ï´Ù */
+	/** íƒ€ê²Ÿì˜ ì›”ë“œ ì¢Œí‘œë¥¼ ë„˜ê²¨ë°›ì•„ ë½ì˜¨ ë§ˆì»¤ì˜ 2D ìŠ¤í¬ë¦° ìœ„ì¹˜ë¥¼ ê°±ì‹ í•©ë‹ˆë‹¤ */
 	void UpdateLockOnMarkerPosition(const FVector& TargetWorldLocation);
 
 private:
@@ -33,13 +36,19 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> StaminaProgressBar;
 
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UProgressBar> ValorProgressBar;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<URadialSlider> UltimateProgressBar;
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> GoldText;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> SoulsText;
 
-	/** WBPÀÇ ÀÌ¹ÌÁö ÀÌ¸§(LockOnMarker)°ú ÀÏÄ¡ÇØ¾ß ÇÕ´Ï´Ù */
+	/** WBPì˜ ì´ë¯¸ì§€ ì´ë¦„(LockOnMarker)ê³¼ ì¼ì¹˜í•´ì•¼ í•©ë‹ˆë‹¤ */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> LockOnMarker;
 };

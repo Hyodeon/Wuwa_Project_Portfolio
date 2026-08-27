@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -17,8 +17,10 @@ class WUWA_PROJECT_API UHealthBar : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	// ºí·çÇÁ¸°Æ®ÀÇ ÀÌ¸§°ú µ¿ÀÏ.
+	// ì—ë””í„°ì˜ ë§‰ëŒ€ ì´ë¦„ê³¼ ì¼ì¹˜í•´ì•¼ í•¨.
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* HealthBar;
 
+	UPROPERTY(meta = (BindWidget))
+	UProgressBar* ResonanceBar;
 };

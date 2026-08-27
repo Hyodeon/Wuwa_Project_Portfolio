@@ -1,11 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BaseAttackData.h" // °æ·Î¿¡ ¸Â°Ô Á¶Á¤
+#include "BaseAttackData.h" // ê³µìš© ë¶€ëª¨ ë°ì´í„°
+#include "GameplayTagContainer.h"
 #include "PlayerAttackData.generated.h"
 
 /**
- * ÇÃ·¹ÀÌ¾î Àü¿ë °ø°İ µ¥ÀÌÅÍ (ÇùÁÖ È¹µæ, °øÁø °¨¼ÒÄ¡ µî Æ÷ÇÔ)
+ * í”Œë ˆì´ì–´ ì „ìš© ê³µê²© ë°ì´í„° (í˜‘ì£¼ íšë“, ê³µì§„ ê°ì†Œì¹˜ ë“± í¬í•¨)
  */
 UCLASS(BlueprintType)
 class WUWA_PROJECT_API UPlayerAttackData : public UBaseAttackData
@@ -13,15 +14,11 @@ class WUWA_PROJECT_API UPlayerAttackData : public UBaseAttackData
 	GENERATED_BODY()
 
 public:
-	// °ø°İ ÀûÁß ½Ã °¨¼Ò½ÃÅ³ ±âº» °øÁø ¼öÄ¡
+	// ê³µê²© ì ì¤‘ ì‹œ ê°ì†Œì‹œí‚¬ ê¸°ë³¸ ê³µì§„ ìˆ˜ì¹˜
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Resonance")
 	float ResonanceReduction = 15.0f;
 
-	// °ø°İ ÀûÁß ½Ã È¹µæÇÒ ÇùÁÖ(Concerto) °ÔÀÌÁö ¾ç
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Concerto")
-	float ConcertoGain = 10.0f;
-
-	// Ä®³¯ Ãã(BladeDance) ¶Ç´Â ¿ë¸Í(Valor) µî Æ¯¼ö ÀÚ¿ø È¹µæ·®
+	// ì ì¤‘ ì‹œ íšë“í•  ìì› (íƒœê·¸ì™€ íšë“ëŸ‰ ë§¤í•‘)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Resource")
-	float SpecialResourceGain = 10.0f;
+	TMap<FGameplayTag, float> ResourceGains;
 };

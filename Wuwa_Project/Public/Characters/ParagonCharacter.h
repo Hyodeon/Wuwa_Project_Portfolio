@@ -6,6 +6,7 @@
 #include "Characters/BaseCharacter.h"
 #include "InputActionValue.h"
 #include "Data/PlayerAttackData.h"
+#include "ActiveGameplayEffectHandle.h"
 #include "ParagonCharacter.generated.h"
 
 class USpringArmComponent;
@@ -195,4 +196,20 @@ private:
 	bool bIsLockedOn = false;
 	bool bCachedIsLockedOn = false;
 	FVector CachedDodgeDirection = FVector::ZeroVector;
+
+public:
+	// ================= [패시브 (Valor)] =================
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Passives")
+	TSubclassOf<UGameplayEffect> GE_Valor_DamageReduction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Passives")
+	TSubclassOf<UGameplayEffect> GE_Valor_SuperArmor;
+
+	// Valor 수치가 변경될 때 AttributeSet이 이 함수를 호출합니다.
+	void OnValorChanged(float OldValue, float NewValue);
+
+private:
+	// 현재 적용중인 GE들의 핸들 (조건 불만족 시 회수하기 위함)
+	FActiveGameplayEffectHandle ActiveValorDRHandle;
+	FActiveGameplayEffectHandle ActiveValorSuperArmorHandle;
 };

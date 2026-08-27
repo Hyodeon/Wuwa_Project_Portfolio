@@ -144,6 +144,23 @@ void ABaseCharacter::ApplyDamageToTarget(AActor* TargetActor, const UBaseAttackD
 
 	AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
 
+	// 플레이어인 경우(공격 데이터가 PlayerAttackData인 경우), 자신에게 자원 획득 이펙트 적용
+	if (const UPlayerAttackData* PlayerData = Cast<UPlayerAttackData>(AttackData))
+	{
+		if (ResourceGainEffectClass)
+		{
+			FGameplayEffectSpecHandle ResourceSpecHandle = AbilitySystemComponent->MakeOutgoingSpec(ResourceGainEffectClass, 1.0f, ContextHandle);
+			if (ResourceSpecHandle.IsValid())
+			{
+				for (const auto& Pair : PlayerData->ResourceGains)
+				{
+					ResourceSpecHandle.Data->SetSetByCallerMagnitude(Pair.Key, Pair.Value);
+				}
+				AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*ResourceSpecHandle.Data.Get());
+			}
+		}
+	}
+
 	if (AttackData->HitImpactFX)
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), AttackData->HitImpactFX, HitLocation);
@@ -163,19 +180,21 @@ void ABaseCharacter::ApplyDamageToTarget(AActor* TargetActor, const UBaseAttackD
 
 void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 {
-	if (HasMatchingGameplayTag(WuwaGameplayTags::State_Invulnerable))
+	if (HasMatchingGameplayTag(WuwaGameplayTags::State_Invulnerable) || HasMatchingGameplayTag(WuwaGameplayTags::State_HyperArmor))
 	{
 		return;
 	}
 
-	if (MotionWarpingComponent)
-	{
-		MotionWarpingComponent->RemoveAllWarpTargets();
-	}
-
 	if (IsAlive())
 	{
-		DirectionalHitReact(Hitter ? Hitter->GetActorLocation() : ImpactPoint);
+		if (!HasMatchingGameplayTag(WuwaGameplayTags::State_SuperArmor) && !HasMatchingGameplayTag(WuwaGameplayTags::State_Groggy))
+		{
+			if (MotionWarpingComponent)
+			{
+				MotionWarpingComponent->RemoveAllWarpTargets();
+			}
+			DirectionalHitReact(Hitter ? Hitter->GetActorLocation() : ImpactPoint);
+		}
 	}
 	else
 	{

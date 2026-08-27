@@ -128,6 +128,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "GAS|Effects")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "GAS|Effects")
+	TSubclassOf<UGameplayEffect> ResourceGainEffectClass;
+
 	// ================= [몽타주 및 섹션] =================
 	UPROPERTY(EditDefaultsOnly, Category = "Animation|Montages")
 	TObjectPtr<UAnimMontage> AttackMontage;

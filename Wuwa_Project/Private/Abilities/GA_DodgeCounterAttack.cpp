@@ -1,9 +1,10 @@
-﻿#include "Abilities/GA_DodgeCounterAttack.h"
+#include "Abilities/GA_DodgeCounterAttack.h"
 #include "Characters/ParagonCharacter.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystemComponent.h"
 #include "WuwaGameplayTags.h"
+#include "Data/PlayerAttackData.h"
 
 UGA_DodgeCounterAttack::UGA_DodgeCounterAttack()
 {
@@ -64,6 +65,11 @@ void UGA_DodgeCounterAttack::ActivateAbility(
 	else 
 	{
 		// 3. 둘 다 없으면 그냥 현재 입력/바라보는 방향으로
+	}
+
+	if (AttackData)
+	{
+		Character->SetCurrentAttackData(AttackData);
 	}
 
 	UAnimMontage* AttackMontage = Character->GetAttackMontage();

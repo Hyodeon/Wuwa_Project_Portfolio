@@ -3,19 +3,25 @@
 #include "AttributeSet/ParagonAttributeSet.h"
 #include "WuwaGameplayTags.h"
 
-// Ω∫≈» ƒ∏√≥ ±∏¡∂√º ¡§¿«
+// Ïä§ÌÉØ Ï∫°Ï≤ò Íµ¨Ï°∞Ï≤¥ Ï†ïÏùò
 struct FDamageStatics
 {
-	// Source (∞¯∞›¿⁄) Ω∫≈» ƒ∏√≥ º±æ
+	// Source (Í≥µÍ≤©Ïûê) Ïä§ÌÉØ Ï∫°Ï≤ò ÏÑ†Ïñ∏
 	DECLARE_ATTRIBUTE_CAPTUREDEF(AttackPower);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(ResonanceAttackPower);
+	
+	// Target (ÌîºÍ≤©Ïûê) Ïä§ÌÉØ Ï∫°Ï≤ò ÏÑ†Ïñ∏
+	DECLARE_ATTRIBUTE_CAPTUREDEF(IncomingDamageReduction);
 
 	FDamageStatics()
 	{
-		// ∞¯∞›¿⁄¿« AttackPower ƒ∏√≥ (Ω∫≥¿º¶: false - ¿˚øÎ Ω√¡° ∞™ ªÁøÎ)
+		// Í≥µÍ≤©ÏûêÏùò AttackPower Ï∫°Ï≤ò (Ïä§ÎÉÖÏÉ∑: false - Ï†ÅÏö© ÏãúÏ†ê Í∞í ÏÇ¨Ïö©)
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UParagonAttributeSet, AttackPower, Source, false);
-		// ∞¯∞›¿⁄¿« ResonanceAttackPower ƒ∏√≥
+		// Í≥µÍ≤©ÏûêÏùò ResonanceAttackPower Ï∫°Ï≤ò
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UParagonAttributeSet, ResonanceAttackPower, Source, false);
+		
+		// ÌîºÍ≤©ÏûêÏùò IncomingDamageReduction Ï∫°Ï≤ò
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UParagonAttributeSet, IncomingDamageReduction, Target, false);
 	}
 };
 
@@ -27,9 +33,10 @@ static const FDamageStatics& DamageStatics()
 
 UDamageExecutionCalculation::UDamageExecutionCalculation()
 {
-	// ƒ∏√≥ ∏Ò∑œ µÓ∑œ
+	// Ï∫°Ï≤ò Î™©Î°ù Îì±Î°ù
 	RelevantAttributesToCapture.Add(DamageStatics().AttackPowerDef);
 	RelevantAttributesToCapture.Add(DamageStatics().ResonanceAttackPowerDef);
+	RelevantAttributesToCapture.Add(DamageStatics().IncomingDamageReductionDef);
 }
 
 void UDamageExecutionCalculation::Execute_Implementation(
@@ -38,7 +45,7 @@ void UDamageExecutionCalculation::Execute_Implementation(
 {
 	const FGameplayEffectSpec& Spec = ExecutionParams.GetOwningSpec();
 
-	// 1. ∞¯∞›¿⁄(Source)øÕ ««∞›¿⁄(Target)¿« ≈¬±◊ ƒ¡≈◊¿Ã≥  √ﬂ√‚
+	// 1. Í≥µÍ≤©Ïûê(Source)ÏôÄ ÌîºÍ≤©Ïûê(Target)Ïùò ÌÉúÍ∑∏ Ïª®ÌÖåÏù¥ÎÑà Ï∂îÏ∂ú
 	const FGameplayTagContainer* SourceTags = Spec.CapturedSourceTags.GetAggregatedTags();
 	const FGameplayTagContainer* TargetTags = Spec.CapturedTargetTags.GetAggregatedTags();
 
@@ -47,15 +54,15 @@ void UDamageExecutionCalculation::Execute_Implementation(
 	EvaluationParameters.TargetTags = TargetTags;
 
 	// =========================================================================
-	// [1] π´¿˚(Invulnerable) √º≈©: ¥ÎªÛ¿Ã π´¿˚¿Ã∏È µ•πÃ¡ˆ 0 √≥∏Æ »ƒ ¡ÔΩ√ ¡æ∑·
+	// [1] Î¨¥Ï†Å(Invulnerable) ÎòêÎäî ÌïòÏù¥ÌçºÏïÑÎ®∏(HyperArmor) Ï≤¥ÌÅ¨
 	// =========================================================================
-	if (TargetTags && TargetTags->HasTagExact(WuwaGameplayTags::State_Invulnerable))
+	if (TargetTags && (TargetTags->HasTagExact(WuwaGameplayTags::State_Invulnerable) || TargetTags->HasTagExact(WuwaGameplayTags::State_HyperArmor)))
 	{
 		return;
 	}
 
 	// =========================================================================
-	// [2] ∞¯∞›¿⁄ Ω∫≈» π◊ SetByCaller ∏º« πË¿≤ √ﬂ√‚
+	// [2] Í≥µÍ≤©Ïûê Ïä§ÌÉØ Î∞è SetByCaller Î™®ÏÖò Î∞∞Ïú® Ï∂îÏ∂ú
 	// =========================================================================
 	float SourceAttackPower = 0.0f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().AttackPowerDef, EvaluationParameters, SourceAttackPower);
@@ -65,13 +72,13 @@ void UDamageExecutionCalculation::Execute_Implementation(
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResonanceAttackPowerDef, EvaluationParameters, SourceResonanceAttackPower);
 	SourceResonanceAttackPower = FMath::Max(0.0f, SourceResonanceAttackPower);
 
-	// SetByCallerø°º≠ ¿¸¥ﬁµ» ∏º« πË¿≤ (±‚∫ª∞™: 1.0f)
+	// SetByCallerÏóêÏÑú Ï†ÑÎã¨Îêú Î™®ÏÖò Î∞∞Ïú® (Í∏∞Î≥∏Í∞í: 1.0f)
 	float MotionValue = Spec.GetSetByCallerMagnitude(WuwaGameplayTags::Data_Damage_MotionValue, false, 1.0f);
-	// SetByCallerø°º≠ ¿¸¥ﬁµ» ∞¯¡¯ ∞®º“ƒ° (±‚∫ª∞™: 10.0f)
+	// SetByCallerÏóêÏÑú Ï†ÑÎã¨Îêú Í≥µÏßÑ Í∞êÏÜåÏπò (Í∏∞Î≥∏Í∞í: 10.0f)
 	float ResonanceReduction = Spec.GetSetByCallerMagnitude(WuwaGameplayTags::Data_Damage_ResonanceValue, false, 10.0f);
 
 	// =========================================================================
-	// [3] √º∑¬ µ•πÃ¡ˆ ∞ËªÍ (±◊∑Œ±‚ Ω√ 1.5πË «««ÿ ¡ı∆¯)
+	// [3] Ï≤¥Î†• Îç∞ÎØ∏ÏßÄ Í≥ÑÏÇ∞ (Í∑∏Î°úÍ∏∞ Ïãú 1.5Î∞∞ ÌîºÌï¥ Ï¶ùÌè≠)
 	// =========================================================================
 	float FinalDamage = SourceAttackPower * MotionValue;
 
@@ -82,17 +89,29 @@ void UDamageExecutionCalculation::Execute_Implementation(
 	}
 
 	// =========================================================================
-	// [4] ∞¯¡¯(Resonance) ∆ƒ±´∑Æ ∞ËªÍ
+	// [3-1] ÌîºÌï¥ Í∞êÏÜåÏú®(IncomingDamageReduction) Ï†ÅÏö©
 	// =========================================================================
-	// ∞¯∞›¿⁄¿« ∞¯¡¯ ∞¯∞›∑¬ ∞ËºˆøÕ ∏º« ∞Ì¿Ø ∞¯¡¯ ∞®º“ƒ°∏¶ ∞·«’
+	float TargetDamageReduction = 0.0f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().IncomingDamageReductionDef, EvaluationParameters, TargetDamageReduction);
+	
+	// ÌîºÌï¥ Í∞êÏÜåÏú®Ïù¥ 0.0 ÎØ∏ÎßåÏù¥Í±∞ÎÇò 1.0(100% Î©¥Ïó≠) Ï¥àÍ≥º Î∞©ÏßÄ
+	TargetDamageReduction = FMath::Clamp(TargetDamageReduction, 0.0f, 1.0f);
+	
+	// ÏµúÏ¢Ö Îç∞ÎØ∏ÏßÄ = Îç∞ÎØ∏ÏßÄ * (1 - ÌîºÌï¥Í∞êÏÜåÏú®)
+	FinalDamage *= (1.0f - TargetDamageReduction);
+
+	// =========================================================================
+	// [4] Í≥µÏßÑ(Resonance) ÌååÍ¥¥Îüâ Í≥ÑÏÇ∞
+	// =========================================================================
+	// Í≥µÍ≤©ÏûêÏùò Í≥µÏßÑ Í≥µÍ≤©Î†• Í≥ÑÏàòÏôÄ Î™®ÏÖò Í≥†Ïú† Í≥µÏßÑ Í∞êÏÜåÏπòÎ•º Í≤∞Ìï©
 	float FinalResonanceDamage = (SourceResonanceAttackPower * 0.1f) + ResonanceReduction;
 
 	// =========================================================================
-	// [5] ««∞›¿⁄ AttributeSetø° ¿˚øÎ (Health ∞®º“, ResonanceValue ∞®º“)
+	// [5] ÌîºÍ≤©Ïûê AttributeSetÏóê Ï†ÅÏö© (Health Í∞êÏÜå, ResonanceValue Í∞êÏÜå)
 	// =========================================================================
 	if (FinalDamage > 0.0f)
 	{
-		// Health¥¬ ¿Ωºˆ∏¶ ¥ı«œø©(Add) ∞®º“Ω√≈¥
+		// HealthÎäî ÏùåÏàòÎ•º ÎçîÌïòÏó¨(Add) Í∞êÏÜåÏãúÌÇ¥
 		OutExecutionOutput.AddOutputModifier(
 			FGameplayModifierEvaluatedData(
 				UParagonAttributeSet::GetHealthAttribute(),
@@ -104,7 +123,7 @@ void UDamageExecutionCalculation::Execute_Implementation(
 
 	if (FinalResonanceDamage > 0.0f)
 	{
-		// ResonanceValue ∞®º“
+		// ResonanceValue Í∞êÏÜå
 		OutExecutionOutput.AddOutputModifier(
 			FGameplayModifierEvaluatedData(
 				UParagonAttributeSet::GetResonanceValueAttribute(),
